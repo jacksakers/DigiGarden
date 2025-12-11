@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiGarden - Your Digital Garden</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1a202e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        code, pre {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .markdown-body a {
+            color: #34d399;
+            text-decoration: underline;
+        }
+        .markdown-body a:hover {
+            color: #6ee7b7;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            color: #d1d5db;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .markdown-body code {
+            background-color: #1e293b;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+        }
+        .markdown-body pre {
+            background-color: #1e293b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-gray-300 min-h-screen">
+    
+    <!-- Main Layout -->
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-80 bg-slate-800 border-r border-slate-700 flex flex-col transition-all duration-300">
+            <!-- Search Bar -->
+            <div class="p-4 border-b border-slate-700">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="searchInput"
+                        placeholder="Search notes... (Ctrl+K)"
+                        class="w-full bg-slate-900 text-gray-300 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <!-- Search Results Dropdown -->
+                <div id="searchResults" class="hidden absolute z-50 mt-2 w-72 bg-slate-800 rounded-lg shadow-xl border border-slate-700 max-h-96 overflow-y-auto"></div>
+            </div>
+
+            <!-- New Note Button -->
+            <div class="p-4 border-b border-slate-700">
+                <button 
+                    id="newNoteBtn"
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    New Note
+                </button>
+            </div>
+
+            <!-- Notes Tree -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Your Garden</h2>
+                <div id="notesTree" class="space-y-1">
+                    <!-- Notes will be loaded here -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            
+            <!-- Welcome Screen (shown when no note is selected) -->
+            <div id="welcomeScreen" class="flex-1 flex items-center justify-center p-8">
+                <div class="text-center max-w-md">
+                    <h1 class="text-4xl font-bold text-emerald-400 mb-4">🌱 Welcome to DigiGarden</h1>
+                    <p class="text-gray-400 text-lg mb-8">Your personal digital garden where ideas grow and connect.</p>
+                    <button 
+                        onclick="createNewNote()"
+                        class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                    >
+                        Create Your First Note
+                    </button>
+                </div>
+            </div>
+
+            <!-- Note View (hidden by default) -->
+            <div id="noteView" class="flex-1 flex flex-col overflow-hidden hidden">
+                <!-- Note Header -->
+                <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
+                    <input 
+                        type="text" 
+                        id="noteTitle"
+                        placeholder="Untitled Note"
+                        class="text-2xl font-semibold bg-transparent border-none focus:outline-none text-gray-200 flex-1"
+                    />
+                    <div class="flex gap-2">
+                        <button 
+                            id="editBtn"
+                            class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button 
+                            id="saveBtn"
+                            class="hidden px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors text-white font-semibold"
+                        >
+                            Save
+                        </button>
+                        <button 
+                            id="deleteBtn"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Note Content -->
+                <div class="flex-1 overflow-y-auto p-8">
+                    <!-- Read Mode -->
+                    <div id="readMode" class="markdown-body prose prose-invert max-w-none">
+                        <!-- Rendered markdown will appear here -->
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div id="editMode" class="hidden">
+                        <textarea 
+                            id="noteContent"
+                            class="w-full h-full min-h-[500px] bg-slate-800 text-gray-300 p-4 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                            placeholder="Start writing... Use [[Note Title]] to create links"
+                        ></textarea>
+                        
+                        <!-- Image Upload Area -->
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Upload Image</label>
+                            <div 
+                                id="dropZone"
+                                class="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center hover:border-emerald-500 transition-colors cursor-pointer"
+                            >
+                                <input type="file" id="fileInput" class="hidden" accept="image/*" />
+                                <svg class="w-12 h-12 mx-auto text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                <p class="text-gray-400">Drag & drop an image, or click to select</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backlinks Section -->
+                <div id="backlinksSection" class="bg-slate-800 border-t border-slate-700 p-4">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Linked by...</h3>
+                    <div id="backlinksContainer" class="flex flex-wrap gap-2">
+                        <!-- Backlinks will appear here -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

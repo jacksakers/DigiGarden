@@ -1,0 +1,269 @@
+Technical Design Document: Self-Hosted Digital Garden
+
+1. Project Overview
+
+Goal: Create a lightweight, fast, self-hosted personal knowledge base ("Digital Garden") accessible from anywhere via Tailscale.
+Core Philosophy:
+
+Speed: Fast capture of ideas.
+
+Connection: Bi-directional linking (like Obsidian) and hierarchical topics.
+
+Simplicity: Minimal dependencies (Flask + TinyDB), clean UI (Tailwind CSS), Dark Mode default.
+
+Ownership: 100% self-hosted on Raspberry Pi, files stored locally.
+
+2. System Architecture
+
+2.1 Technology Stack
+
+Hardware: Raspberry Pi 4 Model B (4GB+ RAM recommended).
+
+OS: Raspberry Pi OS Lite (64-bit).
+
+Backend Framework: Flask (Python) - Lightweight, easy to extend.
+
+Database: TinyDB - Serverless, JSON-based, perfect for personal scale (<10k notes).
+
+Frontend: HTML5 + Tailwind CSS (via CDN or local build) + Vanilla JavaScript.
+
+Editor: EasyMDE (Simple Markdown Editor) or a raw Textarea with marked.js for preview.
+
+Network Access: Tailscale (Private Mesh VPN).
+
+2.2 Data Flow
+
+User opens the web app via Tailscale IP (e.g., http://100.x.y.z:5000).
+
+Frontend sends requests (GET/POST) to the Flask server.
+
+Flask processes logic (Markdown parsing, link extraction).
+
+TinyDB reads/writes JSON data from the SSD.
+
+Images are saved directly to the static/uploads directory.
+
+3. Data Schema (TinyDB)
+
+We will use a document-oriented structure. To support the "Hierarchy" you mentioned (Topic -> Sub-topic), we will use a parent_id field.
+
+Table: notes
+
+Field
+
+Type
+
+Description
+
+id
+
+String (UUID)
+
+Unique identifier for the note.
+
+title
+
+String
+
+The display title of the note.
+
+content
+
+String
+
+The full Markdown content.
+
+parent_id
+
+String (UUID)
+
+ID of the parent topic (null if top-level).
+
+tags
+
+List[String]
+
+e.g., ["homelab", "pi", "ideas"].
+
+created_at
+
+Timestamp
+
+ISO 8601 string.
+
+updated_at
+
+Timestamp
+
+ISO 8601 string.
+
+links
+
+List[String]
+
+IDs of notes this note links TO.
+
+backlinks
+
+List[String]
+
+IDs of notes that link TO this note.
+
+Note: Storing links and backlinks explicitly allows for instant graph generation without scanning every file on every page load.
+
+4. Key Features & Implementation Logic
+
+4.1 Hierarchical Organization (Topics)
+
+Logic: Every note is just a note. A "Topic" is simply a note that has children.
+
+UI: The sidebar will render a tree view.
+
+Query: db.search(Query().parent_id == None) gets top-level roots.
+
+Clicking a "folder" icon fetches children: db.search(Query().parent_id == current_note_id).
+
+4.2 Bi-Directional Linking ([[WikiLinks]])
+
+Syntax: User types [[Raspberry Pi Setup]].
+
+Backend Logic (On Save):
+
+Regex parse content for \[\[(.*?)\]\].
+
+For each match:
+
+Search DB for a note with that title.
+
+If found: Get its id.
+
+If not found: Create a "stub" note with that title and get the new id.
+
+Update the current note's links field.
+
+Update the target note's backlinks field (add current note's ID).
+
+4.3 Image Uploads
+
+UI: Drag-and-drop zone in the editor.
+
+Backend:
+
+Route: POST /upload.
+
+Action: Save file to app/static/uploads/.
+
+Return: Markdown string ![image_name](/static/uploads/image_name.jpg) to be inserted into the editor.
+
+4.4 Search
+
+Library: Fuse.js (Frontend) or simple Python substring search (Backend).
+
+Implementation: Since the DB is local and small, we can send a "search index" (id, title, tags) to the frontend on load for instant "spotlight-style" search (Cmd+K).
+
+5. API Endpoints (Flask)
+
+Method
+
+Endpoint
+
+Description
+
+GET
+
+/
+
+Renders the main dashboard/sidebar.
+
+GET
+
+/note/<id>
+
+Returns note data (JSON or HTML fragment).
+
+POST
+
+/note
+
+Creates a new note.
+
+PUT
+
+/note/<id>
+
+Updates content, handles link parsing.
+
+DELETE
+
+/note/<id>
+
+Deletes note (and optionally unlinks backlinks).
+
+POST
+
+/upload
+
+Handles image file upload.
+
+GET
+
+/search?q=...
+
+Returns search results.
+
+6. Frontend UI/UX Design
+
+6.1 Layout (Dark Mode)
+
+Color Palette: Slate-900 (Background), Slate-800 (Sidebar), Emerald-400 (Accents/Links), Gray-300 (Text).
+
+Font: Inter (UI), JetBrains Mono (Code blocks).
+
+6.2 Interface Structure
+
+Sidebar (Left - Collapsible on Mobile):
+
+Search Bar: Top pinned.
+
+"Garden" Tree: Hierarchical view of topics.
+
+"Orphans": Notes with no parents (quick capture).
+
+Main Stage (Center):
+
+Read Mode: Rendered Markdown, clickable [[Links]], checkable task lists [ ].
+
+Edit Mode: Markdown editor.
+
+Footer: "Linked by..." section showing backlinks.
+
+6.3 Mobile Considerations
+
+Large touch targets (48px+) for navigation.
+
+Hamburger menu for Sidebar.
+
+"Quick Add" floating action button (FAB) in the bottom right.
+
+Directory Structure:
+
+/home/pi/digital-garden/
+├── app/
+│   ├── main.py (Flask app)
+│   ├── templates/
+│   ├── static/
+│   │   ├── uploads/ (Images go here)
+│   │   └── css/
+│   └── garden.json (TinyDB file)
+└── requirements.txt
+
+
+8. Next Steps
+
+Initialize: Create the folder structure on your Pi (or local machine for dev).
+
+Prototype: Write the basic Flask app with just "Create" and "Read" functionality.
+
+Refine: Add the [[Link]] parsing logic.
+
+Style: Apply Tailwind CSS classes.
