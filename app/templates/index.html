@@ -26,9 +26,15 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
         }
         code, pre {
             font-family: 'JetBrains Mono', monospace;
+        }
+        * {
+            box-sizing: border-box;
         }
         .markdown-body a {
             color: #34d399;
@@ -37,21 +43,76 @@
         .markdown-body a:hover {
             color: #6ee7b7;
         }
-        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+        .markdown-body h1 {
             color: #d1d5db;
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 0.5rem;
+        }
+        .markdown-body h2 {
+            color: #d1d5db;
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin-top: 1.75rem;
+            margin-bottom: 0.875rem;
+        }
+        .markdown-body h3 {
+            color: #d1d5db;
+            font-size: 1.5rem;
+            font-weight: 600;
             margin-top: 1.5rem;
             margin-bottom: 0.75rem;
+        }
+        .markdown-body h4 {
+            color: #d1d5db;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.625rem;
+        }
+        .markdown-body strong {
+            color: #f3f4f6;
+            font-weight: 700;
+        }
+        .markdown-body em {
+            font-style: italic;
+            color: #e5e7eb;
+        }
+        .markdown-body ul, .markdown-body ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        .markdown-body li {
+            margin: 0.5rem 0;
+        }
+        .markdown-body blockquote {
+            border-left: 4px solid #34d399;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #9ca3af;
+            font-style: italic;
         }
         .markdown-body code {
             background-color: #1e293b;
             padding: 0.125rem 0.25rem;
             border-radius: 0.25rem;
+            color: #34d399;
+            font-size: 0.875em;
         }
         .markdown-body pre {
             background-color: #1e293b;
             padding: 1rem;
             border-radius: 0.5rem;
             overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+            color: #e5e7eb;
         }
         .markdown-body img {
             max-width: 100%;
@@ -59,15 +120,150 @@
             border-radius: 0.5rem;
             margin: 1rem 0;
         }
+        .markdown-body hr {
+            border: none;
+            border-top: 2px solid #334155;
+            margin: 2rem 0;
+        }
+        .markdown-body p {
+            margin: 1rem 0;
+            line-height: 1.75;
+        }
+        .wikilink {
+            color: #34d399;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0 0.25rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        .wikilink:hover {
+            background-color: rgba(52, 211, 153, 0.1);
+            color: #6ee7b7;
+        }
+        #graph-container {
+            width: 100%;
+            height: 600px;
+        }
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                left: -320px;
+                top: 0;
+                height: 100vh;
+                z-index: 40;
+                transition: left 0.3s ease-in-out;
+                width: 320px;
+                max-width: 80vw;
+            }
+            #sidebar.open {
+                left: 0;
+            }
+            #overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 30;
+            }
+            #overlay.show {
+                display: block;
+            }
+            .mobile-header {
+                display: flex;
+            }
+            main {
+                width: 100vw;
+                max-width: 100vw;
+            }
+        }
+        @media (min-width: 769px) {
+            .mobile-header {
+                display: none;
+            }
+        }
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            #mainLayout {
+                height: calc(100vh - 64px);
+            }
+            body {
+                overflow-x: hidden;
+            }
+            #noteTitle {
+                font-size: 1.25rem;
+            }
+            #noteContent {
+                font-size: 0.875rem;
+            }
+            .markdown-body {
+                font-size: 0.9375rem;
+            }
+            .markdown-body h1 {
+                font-size: 1.75rem;
+            }
+            .markdown-body h2 {
+                font-size: 1.5rem;
+            }
+            .markdown-body h3 {
+                font-size: 1.25rem;
+            }
+            #graphModal .bg-slate-800 {
+                width: 100%;
+                height: 100%;
+                max-width: 100%;
+                border-radius: 0;
+            }
+            /* Ensure buttons are visible and properly sized */
+            #editBtn, #saveBtn, #deleteBtn {
+                padding: 0.5rem;
+                min-width: 44px;
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #saveBtn {
+                padding: 0.5rem 1rem;
+                min-width: auto;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-gray-300 min-h-screen">
     
+    <!-- Mobile Header -->
+    <div class="mobile-header bg-slate-800 border-b border-slate-700 p-4 items-center justify-between md:hidden">
+        <button id="menuBtn" class="text-gray-300 hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        <h1 class="text-xl font-bold text-emerald-400">🌱 DigiGarden</h1>
+        <button id="mobileNewNoteBtn" class="text-emerald-400 hover:text-emerald-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="overlay" class="hidden"></div>
+
     <!-- Main Layout -->
-    <div class="flex h-screen overflow-hidden">
+    <div id="mainLayout" class="flex h-screen overflow-hidden w-full">
         
         <!-- Sidebar -->
-        <aside id="sidebar" class="w-80 bg-slate-800 border-r border-slate-700 flex flex-col transition-all duration-300">
+        <aside id="sidebar" class="w-80 bg-slate-800 border-r border-slate-700 flex flex-col md:relative md:translate-x-0">
+            <!-- Sidebar Header (Mobile Close Button) -->
+            <div class="flex md:hidden items-center justify-between p-4 border-b border-slate-700">
+                <h2 class="text-lg font-bold text-emerald-400">Menu</h2>
+                <button id="closeSidebarBtn" class="text-gray-400 hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
             <!-- Search Bar -->
             <div class="p-4 border-b border-slate-700">
                 <div class="relative">
@@ -89,12 +285,21 @@
             <div class="p-4 border-b border-slate-700">
                 <button 
                     id="newNoteBtn"
-                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors mb-2"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     New Note
+                </button>
+                <button 
+                    id="graphViewBtn"
+                    class="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                    </svg>
+                    Graph View
                 </button>
             </div>
 
@@ -108,10 +313,10 @@
         </aside>
 
         <!-- Main Content Area -->
-        <main class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 flex flex-col overflow-hidden w-full min-w-0">
             
             <!-- Welcome Screen (shown when no note is selected) -->
-            <div id="welcomeScreen" class="flex-1 flex items-center justify-center p-8">
+            <div id="welcomeScreen" class="flex-1 flex items-center justify-center p-8 w-full">
                 <div class="text-center max-w-md">
                     <h1 class="text-4xl font-bold text-emerald-400 mb-4">🌱 Welcome to DigiGarden</h1>
                     <p class="text-gray-400 text-lg mb-8">Your personal digital garden where ideas grow and connect.</p>
@@ -125,16 +330,17 @@
             </div>
 
             <!-- Note View (hidden by default) -->
-            <div id="noteView" class="flex-1 flex flex-col overflow-hidden hidden">
+            <div id="noteView" class="flex-1 flex flex-col overflow-hidden hidden w-full">
                 <!-- Note Header -->
-                <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
-                    <input 
-                        type="text" 
-                        id="noteTitle"
-                        placeholder="Untitled Note"
-                        class="text-2xl font-semibold bg-transparent border-none focus:outline-none text-gray-200 flex-1"
-                    />
-                    <div class="flex gap-2">
+                <div class="bg-slate-800 border-b border-slate-700 p-4">
+                    <div class="flex items-start md:items-center gap-3 mb-3 flex-col md:flex-row">
+                        <input 
+                            type="text" 
+                            id="noteTitle"
+                            placeholder="Untitled Note"
+                            class="text-2xl font-semibold bg-transparent border-none focus:outline-none text-gray-200 w-full md:flex-1"
+                        />
+                        <div class="flex gap-2 flex-shrink-0 w-full md:w-auto justify-end">
                         <button 
                             id="editBtn"
                             class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
@@ -158,6 +364,17 @@
                             </svg>
                         </button>
                     </div>
+                    </div>
+                    <!-- Tags Section -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-sm text-gray-400">Tags:</span>
+                        <div id="tagsDisplay" class="flex flex-wrap gap-2">
+                            <!-- Tags will be displayed here -->
+                        </div>
+                        <button id="addTagBtn" class="text-emerald-400 hover:text-emerald-300 text-sm px-2 py-1 rounded border border-emerald-400 hover:border-emerald-300 transition-colors hidden">
+                            + Add Tag
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Note Content -->
@@ -169,9 +386,21 @@
 
                     <!-- Edit Mode -->
                     <div id="editMode" class="hidden">
+                        <!-- Parent Note Selector -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Parent Note (optional)</label>
+                            <select 
+                                id="parentNoteSelect"
+                                class="w-full bg-slate-700 text-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            >
+                                <option value="">None (Top Level)</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        
                         <textarea 
                             id="noteContent"
-                            class="w-full h-full min-h-[500px] bg-slate-800 text-gray-300 p-4 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                            class="w-full h-full min-h-[400px] bg-slate-800 text-gray-300 p-4 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                             placeholder="Start writing... Use [[Note Title]] to create links"
                         ></textarea>
                         
@@ -204,6 +433,22 @@
         </main>
     </div>
 
+    <!-- Graph View Modal -->
+    <div id="graphModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-lg w-full max-w-6xl h-5/6 flex flex-col">
+            <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-emerald-400">Graph View</h2>
+                <button id="closeGraphBtn" class="text-gray-400 hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="graph-container" class="flex-1"></div>
+        </div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>

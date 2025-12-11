@@ -90,7 +90,7 @@ At the bottom of each note, you'll see which other notes link to the current not
 2. **Run the Flask app**:
    ```powershell
    cd app
-   python main.py
+   ./.venv/Scripts/python.exe main.py
    ```
 
 3. **Access at**: `http://localhost:5000`
