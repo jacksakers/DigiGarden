@@ -1,0 +1,15 @@
+[Unit]
+Description=DigiGarden - Personal Knowledge Base
+After=network.target
+
+[Service]
+Type=simple
+User=jackberry
+WorkingDirectory=/home/jackberry/usbdrv/DigiGarden/app
+Environment="PATH=/home/jackberry/usbdrv/DigiGarden/digigarden/bin"
+ExecStart=/home/jackberry/usbdrv/DigiGarden/digigarden/bin/python main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

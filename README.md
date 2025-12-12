@@ -95,6 +95,53 @@ At the bottom of each note, you'll see which other notes link to the current not
 
 3. **Access at**: `http://localhost:5100`
 
+## Raspberry Pi Setup (Running as a Service)
+
+To run DigiGarden as a system service on your Raspberry Pi:
+
+1. **Copy the service file to systemd**:
+   ```bash
+   sudo cp digigarden.service /etc/systemd/system/
+   ```
+
+2. **Reload systemd to recognize the new service**:
+   ```bash
+   sudo systemctl daemon-reload
+   ```
+
+3. **Enable the service to start on boot**:
+   ```bash
+   sudo systemctl enable digigarden.service
+   ```
+
+4. **Start the service**:
+   ```bash
+   sudo systemctl start digigarden.service
+   ```
+
+5. **Check service status**:
+   ```bash
+   sudo systemctl status digigarden.service
+   ```
+
+6. **View logs**:
+   ```bash
+   sudo journalctl -u digigarden.service -f
+   ```
+
+### Useful Service Commands
+
+- **Stop the service**: `sudo systemctl stop digigarden.service`
+- **Restart the service**: `sudo systemctl restart digigarden.service`
+- **Disable autostart**: `sudo systemctl disable digigarden.service`
+- **View recent logs**: `sudo journalctl -u digigarden.service -n 50`
+
+### Accessing DigiGarden
+
+Once the service is running, access DigiGarden at:
+- **Local**: `http://localhost:5100`
+- **Via Tailscale**: `http://[your-pi-tailscale-ip]:5100`
+
 ## Data Persistence
 
 Your data is stored in two locations:
