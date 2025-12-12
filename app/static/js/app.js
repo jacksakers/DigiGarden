@@ -428,7 +428,16 @@ async function uploadImage(file) {
             body: formData
         });
         
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Upload failed');
+        }
+        
         const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
         
         // Insert markdown into textarea
         const textarea = noteContent;
@@ -440,7 +449,7 @@ async function uploadImage(file) {
         
     } catch (error) {
         console.error('Error uploading image:', error);
-        alert('Failed to upload image');
+        alert('Failed to upload image: ' + error.message);
     }
 }
 

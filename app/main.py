@@ -189,31 +189,38 @@ def delete_note(note_id):
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     """Handle image file upload"""
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        # Add timestamp to prevent filename collisions
-        name, ext = os.path.splitext(filename)
-        filename = f"{name}_{datetime.now().strftime('%Y%m%d%H%M%S')}{ext}"
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
         
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+        file = request.files['file']
         
-        # Return markdown image syntax
-        markdown = f"![{name}](/static/uploads/{filename})"
-        return jsonify({
-            'markdown': markdown,
-            'url': f"/static/uploads/{filename}"
-        })
-    
-    return jsonify({'error': 'File type not allowed'}), 400
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Add timestamp to prevent filename collisions
+            name, ext = os.path.splitext(filename)
+            filename = f"{name}_{datetime.now().strftime('%Y%m%d%H%M%S')}{ext}"
+            
+            # Ensure upload directory exists
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            # Return markdown image syntax
+            markdown = f"![{name}](/static/uploads/{filename})"
+            return jsonify({
+                'markdown': markdown,
+                'url': f"/static/uploads/{filename}"
+            })
+        
+        return jsonify({'error': 'File type not allowed'}), 400
+    except Exception as e:
+        print(f"Upload error: {str(e)}")
+        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
 @app.route('/api/search', methods=['GET'])
 def search_notes():
