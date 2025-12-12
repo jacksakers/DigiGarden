@@ -93,7 +93,7 @@ At the bottom of each note, you'll see which other notes link to the current not
    ./.venv/Scripts/python.exe main.py
    ```
 
-3. **Access at**: `http://localhost:5000`
+3. **Access at**: `http://localhost:5100`
 
 ## Data Persistence
 

@@ -33,7 +33,7 @@ Network Access: Tailscale (Private Mesh VPN).
 
 2.2 Data Flow
 
-User opens the web app via Tailscale IP (e.g., http://100.x.y.z:5000).
+User opens the web app via Tailscale IP (e.g., http://100.x.y.z:5100).
 
 Frontend sends requests (GET/POST) to the Flask server.
 
