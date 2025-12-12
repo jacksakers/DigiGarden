@@ -556,21 +556,34 @@ function renderGraph() {
         }
     });
     
-    // Create SVG
+    // Create SVG with zoom capability
     const svg = d3.select('#graph-container')
         .append('svg')
         .attr('width', width)
         .attr('height', height);
     
-    // Create simulation
+    const g = svg.append('g');
+    
+    // Add zoom behavior
+    const zoom = d3.zoom()
+        .scaleExtent([0.1, 4])
+        .on('zoom', (event) => {
+            g.attr('transform', event.transform);
+        });
+    
+    svg.call(zoom);
+    
+    // Create simulation with constrained forces
     const simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(links).id(d => d.id).distance(100))
-        .force('charge', d3.forceManyBody().strength(-300))
+        .force('link', d3.forceLink(links).id(d => d.id).distance(80))
+        .force('charge', d3.forceManyBody().strength(-150))
         .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collision', d3.forceCollide().radius(30));
+        .force('collision', d3.forceCollide().radius(35))
+        .force('x', d3.forceX(width / 2).strength(0.1))
+        .force('y', d3.forceY(height / 2).strength(0.1));
     
     // Create links
-    const link = svg.append('g')
+    const link = g.append('g')
         .selectAll('line')
         .data(links)
         .enter()
@@ -580,7 +593,7 @@ function renderGraph() {
         .attr('stroke-opacity', 0.6);
     
     // Create nodes
-    const node = svg.append('g')
+    const node = g.append('g')
         .selectAll('g')
         .data(nodes)
         .enter()
@@ -612,8 +625,14 @@ function renderGraph() {
         .attr('font-size', '12px')
         .style('pointer-events', 'none');
     
-    // Update positions on tick
+    // Update positions on tick with boundary constraints
     simulation.on('tick', () => {
+        // Constrain nodes to container bounds with padding
+        nodes.forEach(d => {
+            d.x = Math.max(40, Math.min(width - 40, d.x));
+            d.y = Math.max(40, Math.min(height - 40, d.y));
+        });
+        
         link
             .attr('x1', d => d.source.x)
             .attr('y1', d => d.source.y)
